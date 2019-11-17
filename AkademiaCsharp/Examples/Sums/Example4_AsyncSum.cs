@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AkademiaCsharp.Examples
+namespace AkademiaCsharp.Examples.Sums
 {
-    public class Example3_InterlockedAsyncSum : IExample
+    public class Example4_AsyncSum : IExample
     {
         private readonly int _taskCount;
         private readonly int _operationCount;
 
-        public Example3_InterlockedAsyncSum(int taskCount, int operationCount)
+        public Example4_AsyncSum(int taskCount, int operationCount)
         {
             _taskCount = taskCount;
             _operationCount = operationCount;
@@ -30,8 +30,7 @@ namespace AkademiaCsharp.Examples
                 {
                     for (var j = 0; j < _operationCount; j++)
                     {
-                        Interlocked.Add(ref result, 1);
-                        // Interlocked.Increment(ref result);
+                        result += 1;
                     }
                 }));
             }

@@ -3,13 +3,13 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AkademiaCsharp.Examples
+namespace AkademiaCsharp.Examples.Sums
 {
-    public class Example4_SyncSum : IExample
+    public class Example5_SyncSum : IExample
     {
         private readonly int _operationCount;
 
-        public Example4_SyncSum(int operationCount)
+        public Example5_SyncSum(int operationCount)
         {
             _operationCount = operationCount;
         }

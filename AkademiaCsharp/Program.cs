@@ -1,6 +1,8 @@
 ﻿using AkademiaCsharp.Examples;
 using AkademiaCsharp.Examples.Caveats;
 using AkademiaCsharp.Examples.Hashing;
+using AkademiaCsharp.Examples.Other;
+using AkademiaCsharp.Examples.Sums;
 using AkademiaCsharp.Models;
 using AkademiaCsharp.Workers;
 using CsvHelper;
@@ -25,6 +27,8 @@ namespace AkademiaCsharp
             var apmHasher = new ApmHasher(hashAlgorithm);
             var asyncHasher = new AsyncHasher(hashAlgorithm);
 
+            const int iterations = 100;
+
             const int streamLength = 1024 * 1024 * 10;
             const int streamSeed = 10924124;
             const int streamCount = 10;
@@ -45,32 +49,43 @@ namespace AkademiaCsharp
                 { $"APM hashing hashing ({streamCount})",                                   new Example7_ApmHashing(apmHasher, streamLength, streamSeed, streamAsyncCount) },
                 { $"Parallel Linq hashing ({streamCount})",                                 new Example8_ParallelLinqHashing(syncHasher, streamLength, streamSeed, streamAsyncCount) },
                 { $"Async hashing ({streamCount})",                                         new Example9_AsyncHashing(asyncHasher, streamLength, streamSeed, streamAsyncCount) },
-                { $"Parallel async hashing - single stream for all tasks ({streamCount})",  new Example10_ParallelSingleStreamAsyncHashing(asyncHasher, streamLength, streamSeed, streamAsyncCount) },
-                { $"Parallel async hashing - single stream per task ({streamCount})",       new Example11_ParallelMultiStreamAsyncHashing(asyncHasher, streamLength, streamSeed, streamAsyncCount) },
+                { $"Parallel async hashing - stream for all tasks ({streamCount})",         new Example10_ParallelSingleStreamAsyncHashing(asyncHasher, streamLength, streamSeed, streamAsyncCount) },
+                { $"Parallel async hashing - stream per task ({streamCount})",              new Example11_ParallelMultiStreamAsyncHashing(asyncHasher, streamLength, streamSeed, streamAsyncCount) },
+                { $"Parallel asyncified APM hashing - stream per task ({streamCount})",     new Example12_AsyncifiedApmHashing(apmHasher, streamLength, streamSeed, streamAsyncCount) },
             };
 
             var sumExamples = new Dictionary<string, IExample>
             {
-                { $"Async sum ({sumTaskCount})",                                            new Example1_AsyncSum(sumTaskCount, sumOperationCount) },
-                { $"Lock-synchronized async sum ({sumTaskCount})",                          new Example2_LockSynchronizedAsyncSum(sumTaskCount, sumOperationCount) },
-                { $"Interlocked async sum ({sumTaskCount})",                                new Example3_InterlockedAsyncSum(sumTaskCount, sumOperationCount) },
-                { $"Sync sum",                                                              new Example4_SyncSum(sumTaskCount * sumOperationCount) },
+                { $"Thread sum ({sumTaskCount}",                                            new Example1_ThreadSum(sumTaskCount, sumOperationCount) },
+                { $"Lock-synchronized thread sum ({sumTaskCount})",                         new Example2_LockSynchronizedThreadSum(sumTaskCount, sumOperationCount) },
+                { $"Interlocked thread sum ({sumTaskCount})",                               new Example3_InterlockedThreadSum(sumTaskCount, sumOperationCount) },
+                { $"Async sum ({sumTaskCount})",                                            new Example4_AsyncSum(sumTaskCount, sumOperationCount) },
+                { $"Sync sum",                                                              new Example5_SyncSum(sumTaskCount * sumOperationCount) },
             };
 
             var caveatsExamples = new Dictionary<string, IExample>
             {
                 //{ "Thread unhandled exception kills process",                               new Example1_ThreadUnhandledExceptionKillsProcess() },
-                { "Using clause in async method",                                           new Example2_UsingClauseInAsyncMethods(asyncHasher, streamLength, streamSeed) }
+                //{ "Using clause in async method",                                           new Example2_UsingClauseInAsyncMethods(asyncHasher, streamLength, streamSeed) },
+                { "Thread ID changing in async methods",                                    new Example3_CurrentThreadInAsyncMethods(10, 5) },
             };
 
-            await RunExamples("hashing", hashExamples, tokenSource.Token);
-            //await RunExamples("sum", sumExamples, tokenSource.Token);
-            //await RunExamples("caveats", caveatsExamples, tokenSource.Token);
+            var otherExamples = new Dictionary<string, IExample>
+            {
+                //{ "Async and Linq",                                                         new Example1_AsyncAndLinq() },
+                //{ "IAsyncEnumerable",                                                       new Example2_AsyncEnumerable() },
+                { "ConcurrentBag",                                                          new Example3_ConcurrentBag() }
+            };
+
+            //await RunExamples("hashing", hashExamples, iterations, tokenSource.Token);
+            //await RunExamples("sum", sumExamples, iterations, tokenSource.Token);
+            await RunExamples("caveats", caveatsExamples, 1, tokenSource.Token);
+            await RunExamples("other", otherExamples, 1, tokenSource.Token);
 
             Console.ReadLine();
         }
 
-        private static async Task RunExamples(string name, IDictionary<string, IExample> examples, CancellationToken token)
+        private static async Task RunExamples(string name, IDictionary<string, IExample> examples, int iterations, CancellationToken token)
         {
             var measurer = new ExampleTimeMeasurer();
             var results = new List<ExampleTimeResult>(examples.Count);
@@ -80,7 +95,7 @@ namespace AkademiaCsharp
                 Print(example.Key);
                 try
                 {
-                    result = await measurer.Measure(example.Key, example.Value, 100, token);
+                    result = await measurer.Measure(example.Key, example.Value, iterations, token);
                 }
                 catch (Exception e)
                 {
